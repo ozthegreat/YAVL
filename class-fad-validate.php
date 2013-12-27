@@ -1,20 +1,13 @@
 <?php
 
+require 'class-fad-validate-wrapper.php';
+
 if( ! class_exists( 'Fad_Validate' ) ) {
 
-class Fad_Validate {
-
-
-	/**
-	 * Used for singleton loading method
-	 * 
-	 * @access private
-	 */
-	private static $instance = NULL;
-
+class Fad_Validate extends Fad_Validate_Wrapper {
 
 	/**
-	 * Array of all methods to run
+	 * Array of all methods to run in this instance
 	 * 
 	 * @type array
 	 * @access protected
@@ -48,30 +41,12 @@ class Fad_Validate {
 
 
 	/**
-	* Last function performed
-	*
-	* @access private
-	* @type array
-	*/
-	private $last_action;
-
-
-	/**
 	* All errors logged
 	*
 	* @access private
 	* @type array
 	*/
 	private $all_errors;
-
-
-	/**
-	* Last error logged
-	*
-	* @access private static
-	* @type array
-	*/
-	private $last_error;
 
 
 	/**
@@ -91,15 +66,7 @@ class Fad_Validate {
 	 */
 	public static function initialize() {
 
-		/*if ( ! self::$instance ) {
-
-			self::$instance = new self();
-
-		} */
-
-		self::$instance = new self();
-
-		return self::$instance;
+		return new self();
 
 	}
 
@@ -170,21 +137,25 @@ class Fad_Validate {
 
 			$class_name = $this->get_class_name( $method );
 
+			// If it's already been loaded into the global array
+			if( isset( parent::$loaded_classes[ $class_name ] ) ) {
+
+				$class = parent::$loaded_classes[ $class_name ];
+
 			// If it has a singleton occurance load it
-			if( method_exists( $class_name, 'get_instance' ) ){
+			} elseif( method_exists( $class_name, 'get_instance' ) ){
 
 				$class = call_user_func( array( $class_name, 'get_instance' ) );
 
-			// If it's already been loaded into the global array
-			} /* elseif() {
-
-
 			// Else create a new instance of it
-			} else */ {
+			} else {
 
 				$class = new $class_name;
 
 			}
+
+			// Save it back to the global array;
+			parent::$loaded_classes[ $class_name ] = $class;
 
 			// Call the function we want.
 			// Merge the instance to validate var with any other args passed to that method specifcally
@@ -313,7 +284,7 @@ class Fad_Validate {
 	 */
 	public function get_last_action(){
 
-		return $this->last_action;
+		return $this->get_last_key_value_of_array( $this->all_actions );
 
 	}
 
@@ -328,8 +299,6 @@ class Fad_Validate {
 		$result = ( $result ? 'TRUE' : 'FALSE' );
 		
 		$this->all_actions[ $function ][ $value ] = $result;
-
-		$this->last_action = array( 'function' => $function, 'value' => $value, 'result' => $result );
 
 		if( 'FALSE' == $result )
 			$this->set_error( $function , $result, $error_message );
@@ -396,7 +365,7 @@ class Fad_Validate {
 	 */
 	public function get_last_error(){
 
-		return $this->last_error;
+		return $this->get_last_key_value_of_array( $this->all_errors );
 
 	}
 
@@ -412,8 +381,6 @@ class Fad_Validate {
 			$error_message = $this->get_error_message( $function );
 
 		$this->all_errors[ $function ][ $value ] = $error_message;
-
-		$this->last_error = array( 'function' => $function, 'value' => $value, 'error' => $error_message );
 
 	}
 
@@ -492,19 +459,6 @@ class Fad_Validate {
 
 
 	/**
-	* Used to clear last_action.
-	*
-	* @access public
-	* @return boolean
-	*/
-	public function clearLastAction(){
-
-		$this->last_action = NULL;
-
-	}
-
-
-	/**
 	* Used to clear actions associated with a specific function.
 	*
 	* @access public
@@ -530,18 +484,6 @@ class Fad_Validate {
 
 	}
 
-	/**
-	* Used to clear last_error.
-	*
-	* @access public
-	* @return boolean
-	*/
-	public function clearLastError(){
-
-		$this->last_error = NULL;
-
-	}
-
 
 	/**
 	* Used to clear errors associated with a specific function.
@@ -553,6 +495,23 @@ class Fad_Validate {
 
 		if( isset( $this->all_errors[ $function ] ) )
 			$this->all_errors[ $function ] = NULL;
+
+	}
+
+
+	/**
+	 * Returns the last Key => Value element of an array as an array.
+	 * 
+	 * @access protected
+	 */
+	protected function get_last_key_value_of_array( $array ){
+
+		if( empty( $array ) )
+			return FALSE;
+
+		$t = end( $array );
+
+		return array( key( $array ) => $t );
 
 	}
 
