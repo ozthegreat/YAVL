@@ -112,6 +112,9 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 	 */
 	public function validate( $args = NULL ){
 
+		// Assume true
+		$result = TRUE;
+
 		if( ! empty( $args ) )
 			$this->set( $args );
 
@@ -126,13 +129,13 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 
 				foreach( $to_validate as $value ){
 
-					$this->do_methods( $value );
+					$result = $this->do_methods( $value );
 
 				}
 
 			} else {
 
-				$this->do_methods( $to_validate );
+				$result = $this->do_methods( $to_validate );
 
 			}
 
@@ -142,7 +145,8 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 
 		}
 
-		return $this->get_current_instance();
+		return $result;
+		// return $this->get_current_instance();
 
 	}
 
@@ -153,6 +157,9 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 	 * @access private
 	 */
 	protected function do_methods( $to_validate ){
+
+		// Assume true;
+		$result = TRUE;
 
 		// Check we have methods
 		// Look through them and call them.
@@ -169,6 +176,8 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 			}
 
 		}
+
+		return $result;
 
 	}
 
@@ -196,9 +205,9 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 			$class_name = $this->get_class_name( $method );
 
 			// If it's already been loaded into the global array
-			if( isset( parent::$loaded_classes[ $class_name ] ) ) {
+			if( isset( parent::$global_loaded_classes[ $class_name ] ) ) {
 
-				$class = parent::$loaded_classes[ $class_name ];
+				$class = parent::$global_loaded_classes[ $class_name ];
 
 			// If it has a singleton occurance load it
 			} elseif( method_exists( $class_name, 'get_instance' ) ){
@@ -213,7 +222,7 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 			}
 
 			// Save it back to the global array;
-			parent::$loaded_classes[ $class_name ] = $class;
+			parent::$global_loaded_classes[ $class_name ] = $class;
 
 			// Call the function we want.
 			// Merge the instance to validate var with any other args passed to that method specifcally
