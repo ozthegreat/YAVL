@@ -59,6 +59,15 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 
 
 	/**
+	 * If we're running all tests or just breaking on the first error
+	 * 
+	 * @access private
+	 * @type boolean
+	 */
+	private $break_first = FALSE;
+
+
+	/**
 	 * Function for singleton loading of the class
 	 * 
 	 * @var access public static
@@ -91,7 +100,7 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 		$this->methods[ $method ] = $args;
 		$this->method_count++;
 
-		return $this;
+		return $this->get_current_instance();
 
 	}
 
@@ -106,26 +115,75 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 		if( ! empty( $args ) )
 			$this->set( $args );
 
-		if( ! empty( $this->methods ) && $this->method_count > 0 ){
+		$to_validate = $this->get_validating();
 
-			foreach( $this->methods as $method => $args ){
+		// Check we have a value to test against
+		// Check if it's an array, obj or string
+		// Pass to the do_methods class for each value
+		if( ! empty( $to_validate ) ){
 
-				$this->load_method( $method, $args );
+			if( is_array( $to_validate ) || is_object( $to_validate ) ){
+
+				foreach( $to_validate as $value ){
+
+					$this->do_methods( $value );
+
+				}
+
+			} else {
+
+				$this->do_methods( $to_validate );
 
 			}
 
+		} else {
+
+			$this->set_error( 'validate', FALSE, 'validate_empty' );
+
 		}
-		
-		return $this;
+
+		return $this->get_current_instance();
 
 	}
 
 
 	/**
-	 * Loads the class
 	 * 
+	 * 
+	 * @access private
 	 */
-	protected function load_method( $method, $args ){
+	protected function do_methods( $to_validate ){
+
+		// Check we have methods
+		// Look through them and call them.
+		if( ! empty( $this->methods ) && $this->method_count > 0 ){
+
+			foreach( $this->methods as $method => $method_args ){
+
+				$result = $this->load_method( $method, $method_args, $to_validate );
+
+				// If $break_first is set and the result is false.
+				if( TRUE === $this->break_first && FALSE == $result )
+					break;
+
+			}
+
+		}
+
+	}
+
+
+	/**
+	 * Loads the class and calls the function
+	 * Checks foor classes, Global class obj => class singlton method => manually loads and calls
+	 * 
+	 * @access protected
+	 * @return boolean
+	 */
+	protected function load_method( $method, $method_args, $to_validate ){
+
+		// Assume failure
+		$result = FALSE;
 
 		// Get the path to the class
 		$file_path = $this->get_class_file_path( $method );
@@ -159,16 +217,18 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 
 			// Call the function we want.
 			// Merge the instance to validate var with any other args passed to that method specifcally
-			$result = call_user_func_array( array( $class, $method ), array_merge( (array) $this->get_validating(), (array) $args ) );
+			$result = call_user_func_array( array( $class, $method ), array_merge( (array) $to_validate, (array) $method_args ) );
 
 			// Set the result to the action and error array.
-			$this->set_action( $method, $this->get_validating(), $result );
+			$this->set_action( $method, $to_validate, $result );
 
 		} else {
 
-			$this->set_action( $method, $this->get_validating(), FALSE, 'Method does not exist.' );
+			$this->set_action( $method, $to_validate, FALSE, 'method_not_exist' );
 
 		}
+
+		return $result;
 
 	}
 
@@ -222,9 +282,12 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 	 */
 	public function set( $args ){
 
+		if( empty( $args ) )
+			return FALSE;
+
 		$this->validating = $args;
 
-		return $this;
+		return $this->get_current_instance();
 
 	}
 
@@ -254,6 +317,33 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 	}
 
 
+	/**
+	 * Current instance only.
+	 * Breaks loop on first error.
+	 * 
+	 * @type boolean
+	 * @access public
+	 */
+	public function breakFirst(){
+
+		$this->break_first = TRUE;
+
+		return $this->get_current_instance();
+
+	}
+
+
+	/**
+	 * Returns $this.
+	 * Usefull for chaining.
+	 * 
+	 * @access protected
+	 */
+	protected function get_current_instance(){
+
+		return $this;
+
+	}
 
 	/*********************************************
 	 *                                           *
@@ -414,8 +504,10 @@ class Fad_Validate extends Fad_Validate_Wrapper {
 
 		$error_messages = array(
 
-							'int'		=> 'Must be an interger.',
-							'between'	=> 'Must be between %s and %s.',
+							'method_not_exist'	=> 'Method does not exist.',
+							'validate_empty'	=> 'Nothing to validate.',
+							'int'				=> 'Must be an interger.',
+							'between'			=> 'Must be between %s and %s.',
 
 		);
 

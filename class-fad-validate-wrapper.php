@@ -10,7 +10,15 @@ abstract class Fad_Validate_Wrapper {
 	 * 
 	 * @access protected
 	 */
-	protected static $loaded_classes = array();
+	protected static $global_loaded_classes = array();
+
+
+	/**
+	 * Stores an array of every action run in every instance.
+	 * 
+	 * @access protected
+	 */
+	protected static $global_all_actions = array();
 
 
 	/**
@@ -18,7 +26,7 @@ abstract class Fad_Validate_Wrapper {
 	 * 
 	 * @access protected
 	 */
-	protected static $debug_info = array();
+	protected static $global_debug_info = array();
 
 
 } /* Fad_Validate_Wrapper */
