@@ -1,13 +1,11 @@
-<?php
+<?php namespace Valitator;
 
-if( ! class_exists( 'Fad_Validate_Wrapper' ) ) {
-
-abstract class Fad_Validate_Wrapper {
+abstract class ValidateWrapper {
 
 	/**
 	 * Stores instances of all the 'rules' classes that have be included and loaded
 	 * so they aren't included more than once.
-	 * 
+	 *
 	 * @access protected
 	 */
 	protected static $global_loaded_classes = array();
@@ -15,7 +13,7 @@ abstract class Fad_Validate_Wrapper {
 
 	/**
 	 * Stores an array of every action run in every instance.
-	 * 
+	 *
 	 * @access protected
 	 */
 	protected static $global_all_actions = array();
@@ -23,12 +21,10 @@ abstract class Fad_Validate_Wrapper {
 
 	/**
 	 * Stores info about everytime the validate class has been run.
-	 * 
+	 *
 	 * @access protected
 	 */
 	protected static $global_debug_info = array();
 
 
 } /* Fad_Validate_Wrapper */
-
-} /* class_exists */

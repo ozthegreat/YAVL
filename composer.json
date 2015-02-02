@@ -1,0 +1,13 @@
+{
+    "name": "ozthegreat/validator",
+    "description": "A PHP PSR-4 compliant validation package",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Oz",
+            "email": "oz@ozthegreat.io"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
