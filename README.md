@@ -1,5 +1,5 @@
-Validation
-==========
+Yet Another Validation Library
+==============================
 
 A custom, PSR-4 compliant, validation class.
 
